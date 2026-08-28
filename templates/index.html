@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Duyệt & Quản lý Video TikTok Nikaya</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-900 text-gray-100 min-h-screen">
+
+    <div class="container mx-auto px-4 py-8">
+        <!-- Header -->
+        <header class="mb-8 border-b border-gray-800 pb-6 flex justify-between items-center">
+            <div>
+                <h1 class="text-3xl font-extrabold text-amber-500 tracking-tight flex items-center gap-3">
+                    <i class="fa-solid fa-dharmachakra animate-spin-slow"></i> Lời Phật Dạy - Kênh TikTok Nikaya
+                </h1>
+                <p class="text-gray-400 mt-1">Review bài viết, tạo video 20s và đăng tải tự động lên TikTok</p>
+            </div>
+            <div class="text-right">
+                <p class="text-sm text-gray-500">Mục tiêu: <span class="text-emerald-400 font-bold">1 Triệu Views</span> trong 30 ngày</p>
+                <p class="text-xs text-gray-600">Mã nguồn: /Users/abc/.gemini/antigravity/scratch/tiktok_nikaya</p>
+            </div>
+        </header>
+
+        <!-- Stats and Tabs -->
+        <div class="flex flex-wrap gap-4 mb-8">
+            <a href="?status=pending" class="flex-1 min-w-[150px] bg-gray-800 border-b-4 {{ 'border-amber-500 bg-gray-750' if status_filter == 'pending' else 'border-transparent' }} p-4 rounded-lg text-center hover:bg-gray-750 transition duration-200">
+                <div class="text-sm text-gray-400 font-semibold uppercase">Chờ xử lý</div>
+                <div class="text-3xl font-bold mt-1 text-amber-400">{{ counts.pending }}</div>
+            </a>
+            <a href="?status=approved" class="flex-1 min-w-[150px] bg-gray-800 border-b-4 {{ 'border-blue-500 bg-gray-750' if status_filter == 'approved' else 'border-transparent' }} p-4 rounded-lg text-center hover:bg-gray-750 transition duration-200">
+                <div class="text-sm text-gray-400 font-semibold uppercase">Đã Duyệt</div>
+                <div class="text-3xl font-bold mt-1 text-blue-400">{{ counts.approved }}</div>
+            </a>
+            <a href="?status=rendered" class="flex-1 min-w-[150px] bg-gray-800 border-b-4 {{ 'border-purple-500 bg-gray-750' if status_filter == 'rendered' else 'border-transparent' }} p-4 rounded-lg text-center hover:bg-gray-750 transition duration-200">
+                <div class="text-sm text-gray-400 font-semibold uppercase">Đã Tạo Video</div>
+                <div class="text-3xl font-bold mt-1 text-purple-400">{{ counts.rendered }}</div>
+            </a>
+            <a href="?status=uploaded" class="flex-1 min-w-[150px] bg-gray-800 border-b-4 {{ 'border-emerald-500 bg-gray-750' if status_filter == 'uploaded' else 'border-transparent' }} p-4 rounded-lg text-center hover:bg-gray-750 transition duration-200">
+                <div class="text-sm text-gray-400 font-semibold uppercase">Đã Đăng TikTok</div>
+                <div class="text-3xl font-bold mt-1 text-emerald-400">{{ counts.uploaded }}</div>
+            </a>
+        </div>
+
+        <!-- Post list -->
+        <main class="grid grid-cols-1 xl:grid-cols-2 gap-8">
+            <div class="space-y-6">
+                <h2 class="text-xl font-bold text-gray-300 flex items-center gap-2">
+                    <i class="fa-solid fa-list-check"></i> Danh sách bài đăng (Tối đa 30 bài đầu tiên)
+                </h2>
+                
+                {% if not posts %}
+                    <div class="bg-gray-800 text-gray-400 p-8 rounded-lg text-center">
+                        <i class="fa-solid fa-folder-open text-4xl mb-3 text-gray-600"></i>
+                        <p>Không có bài đăng nào ở trạng thái này.</p>
+                    </div>
+                {% endif %}
+
+                {% for post in posts %}
+                    <div class="bg-gray-800 rounded-lg p-6 border border-gray-700 shadow-xl relative hover:border-gray-600 transition">
+                        <div class="flex justify-between items-start mb-4">
+                            <span class="bg-gray-700 px-3 py-1 rounded text-sm font-semibold text-gray-300">ID: #{{ post.id }}</span>
+                            <span class="text-xs text-gray-500">Trạng thái: 
+                                {% if post.status == 'pending' %}
+                                    <span class="text-amber-400 font-semibold">Chờ Duyệt</span>
+                                {% elif post.status == 'approved' %}
+                                    <span class="text-blue-400 font-semibold">Đã Duyệt</span>
+                                {% elif post.status == 'rendered' %}
+                                    <span class="text-purple-400 font-semibold">Đã Tạo Video</span>
+                                {% else %}
+                                    <span class="text-emerald-400 font-semibold">Đã Lên Kênh</span>
+                                {% endif %}
+                            </span>
+                        </div>
+
+                        <!-- Edit Form -->
+                        <form action="/update/{{ post.id }}" method="POST" class="space-y-4">
+                            <div>
+                                <label class="block text-xs font-semibold text-gray-400 uppercase mb-1">Tiêu đề Video / Caption:</label>
+                                <input type="text" name="title" value="{{ post.title }}" class="w-full bg-gray-900 border border-gray-700 rounded p-2 text-gray-100 font-bold focus:outline-none focus:border-amber-500">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-amber-500 uppercase mb-1">Nội dung tóm tắt Video (Đọc trong 20s):</label>
+                                <textarea name="summary" rows="3" class="w-full bg-gray-900 border border-gray-700 rounded p-3 text-amber-100 focus:outline-none focus:border-amber-500 font-serif leading-relaxed font-semibold text-base">{{ post.summary }}</textarea>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-gray-500 uppercase mb-1">Nội dung gốc (PDF):</label>
+                                <textarea name="content" rows="2" class="w-full bg-gray-900 border border-gray-800 rounded p-2 text-gray-400 focus:outline-none font-serif text-sm" readonly>{{ post.content }}</textarea>
+                            </div>
+
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-xs font-semibold text-gray-400 uppercase mb-1">Hình nền:</label>
+                                    <select name="image_bg" class="w-full bg-gray-900 border border-gray-700 rounded p-2 text-gray-300 focus:outline-none focus:border-amber-500">
+                                        {% for img in bg_images %}
+                                            <option value="{{ img }}" {{ 'selected' if post.image_bg == img else '' }}>{{ img }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-semibold text-gray-400 uppercase mb-1">Cập nhật trạng thái:</label>
+                                    <select name="status" class="w-full bg-gray-900 border border-gray-700 rounded p-2 text-gray-300 focus:outline-none focus:border-amber-500">
+                                        <option value="pending" {{ 'selected' if post.status == 'pending' else '' }}>Chờ Duyệt</option>
+                                        <option value="approved" {{ 'selected' if post.status == 'approved' else '' }}>Đã Duyệt</option>
+                                        <option value="rendered" {{ 'selected' if post.status == 'rendered' else '' }}>Đã Tạo Video</option>
+                                        <option value="uploaded" {{ 'selected' if post.status == 'uploaded' else '' }}>Đã Đăng TikTok</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="flex gap-2 justify-end pt-2">
+                                <button type="submit" class="bg-gray-700 hover:bg-gray-600 text-white font-semibold py-2 px-4 rounded text-sm transition flex items-center gap-2">
+                                    <i class="fa-solid fa-floppy-disk"></i> Lưu thay đổi
+                                </button>
+                                
+                                {% if post.status == 'approved' or post.status == 'pending' %}
+                                    <button type="button" onclick="renderVideo({{ post.id }}, this)" class="bg-amber-600 hover:bg-amber-500 text-white font-semibold py-2 px-4 rounded text-sm transition flex items-center gap-2">
+                                        <i class="fa-solid fa-clapperboard"></i> Tạo Video (20s)
+                                    </button>
+                                {% endif %}
+
+                                {% if post.status == 'rendered' %}
+                                    <button type="button" onclick="renderVideo({{ post.id }}, this)" class="bg-purple-650 hover:bg-purple-600 text-white font-semibold py-2 px-4 rounded text-sm transition flex items-center gap-2">
+                                        <i class="fa-solid fa-arrows-rotate"></i> Tạo lại Video
+                                    </button>
+                                    <button type="button" onclick="uploadTikTok({{ post.id }}, this)" class="bg-emerald-600 hover:bg-emerald-500 text-white font-semibold py-2 px-4 rounded text-sm transition flex items-center gap-2">
+                                        <i class="fa-brands fa-tiktok"></i> Đăng lên TikTok
+                                    </button>
+                                {% endif %}
+                            </div>
+                        </form>
+                    </div>
+                {% endfor %}
+
+                <!-- Pagination -->
+                {% if total_pages > 1 %}
+                <div class="flex justify-between items-center bg-gray-800 p-4 rounded-lg border border-gray-700 mt-4 shadow-lg">
+                    <span class="text-sm text-gray-400">Trang <strong>{{ page }}</strong> / <strong>{{ total_pages }}</strong> (Tổng: {{ total_count }} bài)</span>
+                    <div class="flex gap-2">
+                        {% if page > 1 %}
+                            <a href="?status={{ status_filter }}&page={{ page - 1 }}" class="bg-gray-750 hover:bg-gray-700 text-white font-semibold py-1.5 px-4 rounded text-sm transition">
+                                <i class="fa-solid fa-angle-left"></i> Trước
+                            </a>
+                        {% else %}
+                            <button class="bg-gray-850 text-gray-600 font-semibold py-1.5 px-4 rounded text-sm cursor-not-allowed" disabled>Trước</button>
+                        {% endif %}
+
+                        {% if page < total_pages %}
+                            <a href="?status={{ status_filter }}&page={{ page + 1 }}" class="bg-gray-750 hover:bg-gray-700 text-white font-semibold py-1.5 px-4 rounded text-sm transition">
+                                Tiếp <i class="fa-solid fa-angle-right"></i>
+                            </a>
+                        {% else %}
+                            <button class="bg-gray-850 text-gray-600 font-semibold py-1.5 px-4 rounded text-sm cursor-not-allowed" disabled>Tiếp</button>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Preview panel -->
+            <div class="bg-gray-800 rounded-lg p-6 border border-gray-700 shadow-xl self-start sticky top-8">
+                <h2 class="text-xl font-bold text-gray-300 mb-6 flex items-center gap-2">
+                    <i class="fa-solid fa-circle-play text-amber-500"></i> Xem trước Video đã tạo
+                </h2>
+                
+                <div class="flex flex-col items-center justify-center bg-gray-950 rounded-lg border border-gray-800 p-4 aspect-[9/16] w-full max-w-[340px] mx-auto relative group">
+                    <video id="preview-video" controls class="w-full h-full rounded shadow-2xl hidden"></video>
+                    <div id="video-placeholder" class="text-center p-8">
+                        <i class="fa-solid fa-video-slash text-5xl text-gray-700 mb-4"></i>
+                        <p class="text-gray-500 text-sm">Bấm "Tạo Video" của bất kỳ bài đăng nào hoặc chọn bài đăng "Đã Tạo Video" để xem thử tại đây.</p>
+                    </div>
+                </div>
+
+                <div id="console-logs" class="mt-6 bg-gray-900 border border-gray-700 rounded p-4 text-xs font-mono text-gray-400 overflow-y-auto max-h-[200px]">
+                    <span class="text-gray-500">[System] Chờ lệnh...</span>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        function log(message) {
+            const consoleDiv = document.getElementById('console-logs');
+            consoleDiv.innerHTML += `\n<span class="text-amber-500">[Log]</span> ${message}`;
+            consoleDiv.scrollTop = consoleDiv.scrollHeight;
+        }
+
+        function renderVideo(postId, btn) {
+            const originalText = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = `<i class="fa-solid fa-spinner animate-spin"></i> Đang tạo...`;
+            log(`Đang chạy ffmpeg tạo video cho Post ID #${postId}...`);
+            
+            fetch(`/render/${postId}`, { method: 'POST' })
+                .then(res => res.json())
+                .then(data => {
+                    btn.disabled = false;
+                    btn.innerHTML = originalText;
+                    if (data.success) {
+                        log(`Tạo video thành công cho ID #${postId}!`);
+                        
+                        // Load and play video in preview
+                        const video = document.getElementById('preview-video');
+                        const placeholder = document.getElementById('video-placeholder');
+                        video.src = `/video/${postId}?t=${new Date().getTime()}`; // Avoid cache
+                        video.classList.remove('hidden');
+                        placeholder.classList.add('hidden');
+                        video.play();
+                    } else {
+                        log(`Lỗi khi tạo video cho ID #${postId}: ${data.error}`);
+                        alert('Lỗi tạo video: ' + data.error);
+                    }
+                })
+                .catch(err => {
+                    btn.disabled = false;
+                    btn.innerHTML = originalText;
+                    log(`Lỗi kết nối: ${err}`);
+                });
+        }
+
+        function uploadTikTok(postId, btn) {
+            const originalText = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = `<i class="fa-solid fa-spinner animate-spin"></i> Đang tải lên...`;
+            log(`Đang khởi chạy trình duyệt ảo để upload Video ID #${postId} lên TikTok...`);
+            
+            fetch(`/upload/${postId}`, { method: 'POST' })
+                .then(res => res.json())
+                .then(data => {
+                    btn.disabled = false;
+                    btn.innerHTML = originalText;
+                    if (data.success) {
+                        log(`Đăng tải thành công lên TikTok cho Post ID #${postId}!`);
+                        alert('Đăng tải video lên TikTok thành công!');
+                        window.location.reload();
+                    } else {
+                        log(`Lỗi upload cho ID #${postId}: ${data.error}`);
+                        alert('Lỗi upload: ' + data.error);
+                    }
+                })
+                .catch(err => {
+                    btn.disabled = false;
+                    btn.innerHTML = originalText;
+                    log(`Lỗi kết nối: ${err}`);
+                });
+        }
+    </script>
+
+    <style>
+        .animate-spin-slow {
+            animation: spin 8s linear infinite;
+        }
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</body>
+</html>

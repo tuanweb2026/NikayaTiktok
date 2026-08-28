@@ -1,0 +1,29 @@
+# Ignore virtual environment
+venv/
+.venv/
+env/
+
+# Ignore Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Ignore OS files
+.DS_Store
+Thumbs.db
+
+# Ignore large output video and temp files
+static/output/*
+!static/output/.gitkeep
+
+# Ignore private TikTok session cookies for security
+data/tiktok_cookies.json
+cookies.json
+
+# Ignore temporary debug screenshots
+static/output/*.png
+static/output/*.jpg
+static/output/*.mp4
+static/output/*.mp3
+static/output/*.wav
