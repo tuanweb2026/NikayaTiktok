@@ -32,7 +32,7 @@ def upload_to_tiktok(post_id):
     # Generate caption
     # Truncate content for caption if it's too long, add tags
     short_content = post["content"][:80] + "..." if len(post["content"]) > 80 else post["content"]
-    caption = f"Lời Phật Dạy: {short_content}\n\n#phatgiao #kinhnikaya #thien #songdep #anlac #xuhuong"
+    caption = f"Lời Phật Dạy: {short_content}\n\nNhấn Đăng Ký kênh Thảo Dương TV (@tuanweb2015) để cùng gieo duyên lành nhen! 🙏\n\n#phatgiao #kinhnikaya #loiphatday #thaoduongtv #tuanweb2015 #nhacthien #anlac #xuhuong"
     
     print(f"Video path: {video_path}")
     print(f"Caption: {caption}")
