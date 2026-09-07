@@ -96,6 +96,60 @@ def upload_post_video(post_id):
 def serve_video(post_id):
     return send_from_directory(OUTPUT_DIR, f"post_{post_id}.mp4")
 
+YT_DB_PATH = "data/youtube_60_shorts.json"
+
+def load_yt_db():
+    if not os.path.exists(YT_DB_PATH):
+        return []
+    with open(YT_DB_PATH, 'r', encoding='utf-8') as f:
+        return json.load(f)
+
+def save_yt_db(data):
+    with open(YT_DB_PATH, 'w', encoding='utf-8') as f:
+        json.dump(data, f, ensure_ascii=False, indent=2)
+
+@app.route('/youtube')
+def youtube_review():
+    shorts = load_yt_db()
+    return render_template('youtube_review.html', shorts=shorts)
+
+@app.route('/update_youtube/<int:order>', methods=['POST'])
+def update_youtube_short(order):
+    data = request.get_json() or {}
+    new_title = data.get('youtube_title', '').strip()
+    new_desc = data.get('youtube_description', '').strip()
+
+    shorts = load_yt_db()
+    item = next((s for s in shorts if s.get('order') == order), None)
+    if not item:
+        return jsonify({"success": False, "error": "Item not found"}), 404
+
+    if new_title:
+        item['youtube_title'] = new_title
+    if new_desc:
+        item['youtube_description'] = new_desc
+
+    save_yt_db(shorts)
+
+    # Also update main database.json if matched
+    pid = item.get('id')
+    if pid:
+        posts = load_db()
+        post = next((p for p in posts if p.get('id') == pid), None)
+        if post:
+            if new_title:
+                post['youtube_title'] = new_title
+            if new_desc:
+                post['youtube_description'] = new_desc
+            save_db(posts)
+
+    return jsonify({"success": True, "message": "Updated successfully"})
+
+@app.route('/api/youtube_shorts')
+def api_youtube_shorts():
+    shorts = load_yt_db()
+    return jsonify(shorts)
+
 if __name__ == '__main__':
     os.makedirs(OUTPUT_DIR, exist_ok=True)
     app.run(host='127.0.0.1', port=5001, debug=True)
